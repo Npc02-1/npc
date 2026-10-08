@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPC — Offset Updater v12</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F0E8;--card:#FFFFFF;--card-2:#FAF8F3;
+  --ink:#15171C;--ink-dim:#58606E;--ink-faint:#8C93A1;
+  --line:#E4DFD3;--line-strong:#CFC8B8;
+  --accent:#FF5A1F;--accent-hover:#E94C13;--accent-soft:#FFEDE5;--accent-ink:#FFFFFF;
+  --green:#14935C;--green-soft:#E3F5EC;
+  --amber:#B87500;--amber-soft:#FFF3D6;
+  --red:#D6393B;--red-soft:#FDE8E8;
+  --log-bg:#14161B;--log-ink:#8892A3;
+  --font-ui:'Bricolage Grotesque',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --r-sm:8px;--r-md:14px;--r-lg:20px;
+  --shadow:0 1px 0 rgba(21,23,28,.04),0 8px 24px -12px rgba(21,23,28,.12);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0E1013;--card:#16191E;--card-2:#1B1F25;
+    --ink:#F1EEE7;--ink-dim:#A3AAB8;--ink-faint:#6E7686;
+    --line:#262B33;--line-strong:#363C47;
+    --accent:#FF6B35;--accent-hover:#FF7F50;--accent-soft:#2D1B14;--accent-ink:#14100E;
+    --green:#3DD598;--green-soft:#12261D;
+    --amber:#F5B93D;--amber-soft:#2B2210;
+    --red:#FF6B6E;--red-soft:#2C1517;
+    --log-bg:#0A0B0E;--log-ink:#7A8394;
+    --shadow:0 1px 0 rgba(255,255,255,.03),0 10px 30px -14px rgba(0,0,0,.6);
+  }
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--font-ui);
+  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  line-height:1.5;font-size:15px;
+}
+::selection{background:var(--accent);color:var(--accent-ink)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px}
+
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+.wrap{max-width:780px;margin:0 auto;padding:28px 16px 56px}
+
+/* Header */
+.hdr{margin-bottom:26px;animation:rise .45s ease both}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
+.hdr-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-dim);display:flex;align-items:center;gap:9px}
+.hdr-eyebrow::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--accent);
+  transform:rotate(45deg)}
+.ver-chip{font-family:var(--font-mono);font-size:11px;font-weight:600;
+  padding:4px 10px;border:1px solid var(--line-strong);border-radius:999px;color:var(--ink-dim);background:var(--card)}
+.hdr-title{font-size:clamp(34px,8vw,54px);font-weight:800;letter-spacing:-.035em;line-height:1;margin-bottom:12px}
+.hdr-title em{font-style:normal;color:var(--accent)}
+.hdr-sub{color:var(--ink-dim);font-size:15px;max-width:520px}
+.hdr-sub code{font-family:var(--font-mono);font-size:12.5px;background:var(--card);
+  border:1px solid var(--line);padding:1px 6px;border-radius:5px;color:var(--ink)}
+
+/* Panel */
+.panel{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:22px;margin-bottom:14px;box-shadow:var(--shadow);animation:rise .45s ease both;
+}
+.panel-eyebrow{font-size:16px;font-weight:700;letter-spacing:-.01em;
+  display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.panel-eyebrow .dot-live{display:none}
+.panel-eyebrow::before{content:attr(data-step);font-family:var(--font-mono);font-size:11px;font-weight:600;
+  color:var(--accent);background:var(--accent-soft);padding:4px 8px;border-radius:6px;letter-spacing:.04em}
+.sec-badge{margin-left:auto;font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.06em;
+  color:var(--ink-faint);border:1px solid var(--line);padding:3px 9px;border-radius:999px;text-transform:uppercase}
+.panel-glow-line{display:none}
+
+/* Status bar */
+.status-bar{display:flex;align-items:center;gap:10px;padding:11px 14px;
+  background:var(--card-2);border:1px solid var(--line);border-radius:var(--r-sm);
+  font-size:13.5px;margin-bottom:16px;color:var(--ink-dim)}
+.status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.status-dot.ok{background:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.status-dot.warn{background:var(--amber);box-shadow:0 0 0 4px var(--amber-soft);animation:pulse 1.6s ease-in-out infinite}
+.status-dot.err{background:var(--red);box-shadow:0 0 0 4px var(--red-soft)}
+
+/* Dump grid */
+.dump-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.dump-grid{grid-template-columns:1fr}}
+.dump-lbl{font-family:var(--font-mono);font-size:10.5px;font-weight:500;color:var(--ink-faint);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.dump-box{border:1.5px dashed var(--line-strong);border-radius:var(--r-md);
+  padding:14px;transition:border-color .2s,background .2s}
+.dump-box.loaded{border:1.5px solid var(--green);background:var(--green-soft)}
+.dump-box.empty{background:var(--card-2)}
+.dump-name{font-family:var(--font-mono);font-size:12px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;margin-bottom:12px}
+.dump-name.ok{color:var(--green);font-weight:500}
+.dump-name.empty{color:var(--ink-faint)}
+.dump-actions{display:flex;gap:8px}
+.dsb-btn{flex:1;padding:8px 0;font-family:var(--font-ui);font-size:13px;font-weight:600;
+  cursor:pointer;border-radius:var(--r-sm);transition:all .15s;border:1px solid}
+.dsb-btn.change{border-color:var(--ink);color:var(--ink);background:transparent}
+.dsb-btn.change:hover{background:var(--ink);color:var(--card)}
+.dsb-btn.clear{flex:0 0 42px;border-color:var(--line-strong);color:var(--red);background:transparent}
+.dsb-btn.clear:hover{background:var(--red-soft);border-color:var(--red)}
+.dsb-btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.dsb-input{display:none}
+
+/* Upload button */
+.upbtn{display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;min-height:76px;padding:16px;background:var(--card-2);
+  border:1.5px dashed var(--line-strong);color:var(--ink-dim);cursor:pointer;
+  font-size:14.5px;font-weight:600;border-radius:var(--r-md);transition:all .2s}
+.upbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.upbtn.has{border:1.5px solid var(--green);color:var(--green);background:var(--green-soft)}
+.upbtn input[type=file]{display:none}
+.upbtn svg{flex-shrink:0}
+.fname{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);margin-top:10px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fname.active{color:var(--ink)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:16px 16px 14px;position:relative;overflow:hidden;box-shadow:var(--shadow);animation:rise .5s ease both}
+.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.stat:nth-child(1)::before{background:var(--accent)}
+.stat:nth-child(2)::before{background:var(--green)}
+.stat:nth-child(3)::before{background:var(--amber)}
+.stat-val{font-size:38px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-bottom:6px;
+  font-variant-numeric:tabular-nums}
+.stat-lbl{font-family:var(--font-mono);font-size:10.5px;font-weight:500;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-faint)}
+
+/* Run button */
+.btn-run{width:100%;min-height:58px;padding:14px;background:var(--accent);border:none;color:var(--accent-ink);
+  font-family:var(--font-ui);font-size:16px;font-weight:700;letter-spacing:-.01em;cursor:pointer;
+  border-radius:var(--r-md);transition:transform .15s,background .15s,box-shadow .15s;
+  box-shadow:0 8px 20px -8px var(--accent)}
+.btn-run:hover{background:var(--accent-hover);transform:translateY(-1px)}
+.btn-run:active{transform:translateY(0)}
+.btn-run{background:#E5303A;color:#fff;box-shadow:0 8px 20px -8px rgba(229,48,58,.75);transition:transform .12s,background .2s,box-shadow .2s}
+.btn-run:hover{background:#CC2630}
+.btn-run:active{transform:scale(.97)}
+.btn-run:disabled{background:#E5303A;color:#fff;opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
+.btn-run.running,.btn-run.running:disabled{background:#F59E0B;color:#1A1200;opacity:1;cursor:progress;box-shadow:0 8px 20px -8px rgba(245,158,11,.75)}
+.btn-run.done,.btn-run.done:hover{background:#16A34A;color:#fff;opacity:1;box-shadow:0 8px 20px -8px rgba(22,163,74,.75)}
+
+/* Progress */
+.prog-wrap{margin-top:14px;display:none}
+.prog-bar{height:6px;background:var(--line);border-radius:999px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .4s;width:0}
+.prog-lbl{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-top:8px;text-align:center}
+
+/* Log */
+.log-box{background:var(--log-bg);border-radius:var(--r-md);padding:16px;min-height:110px;max-height:320px;
+  overflow-y:auto;font-family:var(--font-mono);font-size:11.5px;line-height:1.9;color:var(--log-ink)}
+.log-box::-webkit-scrollbar-thumb{background:#2E333D}
+.log-line{white-space:pre-wrap;word-break:break-all}
+.log-line.ok{color:#4ADE80}.log-line.chg{color:#FF8A5B}.log-line.wrn{color:#FBBF24}
+.log-line.err{color:#F87171}.log-line.inf{color:#6F7889}
+
+/* Download button */
+.btn-dl{width:100%;min-height:54px;padding:14px;background:var(--ink);border:none;color:var(--card);
+  font-family:var(--font-ui);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;
+  display:none;margin-top:14px;border-radius:var(--r-md)}
+.btn-dl:hover{transform:translateY(-1px);opacity:.92}
+.btn-dl.vis{display:block}
+
+/* Footer */
+.footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-faint);padding:20px 2px 0}
+
+/* helper classes kept for scripts */
+.ok,.chg,.wrn,.err,.inf{}
+
+@media(max-width:600px){
+  .wrap{padding:20px 12px 40px}
+  .panel{padding:18px}
+  .stat-val{font-size:30px}
+  .stat{padding:14px 12px 12px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-eyebrow">NPC / Garena Offset Updater</div>
+    <div class="ver-chip">v12</div>
+  </div>
+  <div class="hdr-title">Offset <em>Updater</em></div>
+  <div class="hdr-sub">Auto-patch only <code>RVA</code> and <code>Offset</code> values from your old dump to the new one. Supports <code>.zip</code> <code>.h</code> <code>.cpp</code> <code>.lua</code></div>
+</div>
+
+<!-- DUMPS -->
+<div class="panel">
+  <div class="panel-glow-line"></div>
+  <div class="panel-eyebrow" data-step="01">
+    <span class="dot-live"></span> IL2CPP Dumps
+    <span class="sec-badge">Saved in browser</span>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot err" id="status-dot"></div>
+    <span id="status-txt">No dumps loaded — please upload old and new dump</span>
+  </div>
+
+  <div class="dump-grid">
+    <div>
+      <div class="dump-lbl">Old dump</div>
+      <div class="dump-box empty" id="box-old">
+        <div class="dump-name empty" id="name-old">not loaded</div>
+        <div class="dump-actions">
+          <button class="dsb-btn change" id="btn-change-old" onclick="triggerLoad('old')">↑ Load</button>
+          <button class="dsb-btn clear" id="btn-clear-old" onclick="clearDump('old')" disabled>✕</button>
+        </div>
+      </div>
+      <input type="file" class="dsb-input" id="input-old">
+    </div>
+    <div>
+      <div class="dump-lbl">New dump</div>
+      <div class="dump-box empty" id="box-new">
+        <div class="dump-name empty" id="name-new">not loaded</div>
+        <div class="dump-actions">
+          <button class="dsb-btn change" id="btn-change-new" onclick="triggerLoad('new')">↑ Load</button>
+          <button class="dsb-btn clear" id="btn-clear-new" onclick="clearDump('new')" disabled>✕</button>
+        </div>
+      </div>
+      <input type="file" class="dsb-input" id="input-new">
+    </div>
+  </div>
+</div>
+
+<!-- SOURCE FILE -->
+<div class="panel">
+  <div class="panel-glow-line"></div>
+  <div class="panel-eyebrow" data-step="02">
+    <span class="dot-live"></span> Source file
+    <span class="sec-badge">.zip .h .cpp .lua</span>
+  </div>
+  <label class="upbtn" id="lbl-src">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    Upload source file
+    <input type="file" id="f-src">
+  </label>
+  <div class="fname" id="fn-src">no file selected</div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-val" id="s-changed">—</div><div class="stat-lbl">Updated</div></div>
+  <div class="stat"><div class="stat-val" id="s-same">—</div><div class="stat-lbl">Same</div></div>
+  <div class="stat"><div class="stat-val" id="s-miss">—</div><div class="stat-lbl">Not found</div></div>
+</div>
+
+<button class="btn-run" id="btn-run" disabled>Update offsets</button>
+
+<div class="prog-wrap" id="prog">
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-lbl" id="step-txt"></div>
+</div>
+
+<!-- LOG -->
+<div class="panel" style="margin-top:18px">
+  <div class="panel-glow-line"></div>
+  <div class="panel-eyebrow" data-step="03"><span class="dot-live"></span> Log</div>
+  <div class="log-box" id="log">
+    <div class="log-line inf">// waiting for input...</div>
+  </div>
+  <button class="btn-dl" id="btn-dl">Download updated file</button>
+</div>
+
+<div class="footer">
+  <span>NPC / COD Garena Offset Tool</span>
+  <span>Local processing — nothing leaves your browser</span>
+  <span>v12.0</span>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+const $=id=>document.getElementById(id);
+let srcFile=null,oldText=null,newText=null,updatedBlob=null,updatedFileName='';
+
+const readText=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(f);});
+const readAB=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsArrayBuffer(f);});
+const isZip=f=>f.name.toLowerCase().endsWith('.zip');
+
+// ── DUMP STORAGE (IndexedDB) ──────────────────────────────────
+const DB_NAME='npc_dumps_v11',DB_VER=1,STORE='dumps';
+let db=null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{e.target.result.createObjectStore(STORE)};
+    req.onsuccess=e=>{db=e.target.result;res(db)};
+    req.onerror=e=>rej(e);
+  });
+}
+async function dbSet(key,val){
+  await openDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put(val,key);
+    tx.oncomplete=()=>res();tx.onerror=e=>rej(e);
+  });
+}
+async function dbGet(key){
+  await openDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readonly');
+    const req=tx.objectStore(STORE).get(key);
+    req.onsuccess=()=>res(req.result??null);req.onerror=e=>rej(e);
+  });
+}
+async function dbDel(key){
+  await openDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete=()=>res();tx.onerror=e=>rej(e);
+  });
+}
+
+// ── UI ────────────────────────────────────────────────────────
+function setDumpUI(which,name){
+  const box=$(`box-${which}`),nm=$(`name-${which}`),clr=$(`btn-clear-${which}`),btn=$(`btn-change-${which}`);
+  if(name){
+    box.className='dump-box loaded';nm.className='dump-name ok';
+    nm.textContent=name;clr.disabled=false;btn.textContent='Change';
+  }else{
+    box.className='dump-box empty';nm.className='dump-name empty';
+    nm.textContent='not loaded';clr.disabled=true;btn.textContent='↑ Load';
+  }
+  updateStatus();
+}
+function updateStatus(){
+  const hasOld=!!oldText,hasNew=!!newText;
+  const dot=$('status-dot'),txt=$('status-txt');
+  if(hasOld&&hasNew){dot.className='status-dot ok';txt.textContent='Both dumps loaded — ready to update!';}
+  else if(hasOld||hasNew){dot.className='status-dot warn';txt.textContent=hasOld?'Old dump loaded — upload new dump to continue':'New dump loaded — upload old dump to continue';}
+  else{dot.className='status-dot err';txt.textContent='No dumps loaded — please upload old and new dump';}
+  checkReady();
+}
+function checkReady(){
+  const b=$('btn-run');
+  b.disabled=!(srcFile&&oldText&&newText);
+  // inputs changed -> back to red "ready" state
+  if(!b.classList.contains('running')){b.classList.remove('done');b.textContent='Update offsets';}
+}
+
+function triggerLoad(which){$(`input-${which}`).click();}
+async function loadDump(which,file){
+  log(`// loading ${which} dump: ${file.name}...`,'inf');
+  try{
+    const text=await readText(file);
+    if(which==='old')oldText=text;else newText=text;
+    await dbSet(`dump_${which}`,text);await dbSet(`dump_${which}_name`,file.name);
+    setDumpUI(which,file.name);
+    log(`// ${which} dump saved (${(text.length/1024/1024).toFixed(1)} MB, ${text.split('\n').length.toLocaleString()} lines)`,'ok');
+  }catch(e){log(`// ERR loading ${which} dump: ${e.message}`,'err');}
+}
+async function clearDump(which){
+  if(which==='old')oldText=null;else newText=null;
+  await dbDel(`dump_${which}`);await dbDel(`dump_${which}_name`);
+  setDumpUI(which,null);log(`// ${which} dump cleared`,'inf');
+}
+['old','new'].forEach(which=>{
+  $(`input-${which}`).addEventListener('change',function(){if(this.files&&this.files[0])loadDump(which,this.files[0]);});
+});
+
+const srcEl=$('f-src');
+const srcHandler=function(){
+  const file=this.files&&this.files[0];if(!file)return;
+  srcFile=file;$('fn-src').textContent=file.name;$('fn-src').classList.add('active');
+  $('lbl-src').classList.add('has');checkReady();
+};
+srcEl.addEventListener('change',srcHandler);srcEl.addEventListener('input',srcHandler);
+
+function log(msg,cls=''){
+  const box=$('log'),d=document.createElement('div');
+  d.className='log-line'+(cls?' '+cls:'');d.textContent=msg;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function setProgress(pct,txt){
+  $('prog').style.display='block';
+  $('prog-fill').style.width=pct+'%';$('step-txt').textContent=txt;
+}
+
+// ════════════════════════════════════════════════════════════════
+// CORE IL2CPP DUMP INDEXER  (v9.4 — accuracy-first)
+// ════════════════════════════════════════════════════════════════
+function buildIndex(dumpText){
+  const fieldByOffset=new Map();
+  const methodByOffset=new Map();
+  const offsetByIdentity=new Map();
+  const methodByRva=new Map();
+  const rvaByIdentity=new Map();
+  const lines=dumpText.split('\n');
+  const n=lines.length;
+  let currentClass=null,depth=0,inTypeBody=false,expectMethod=false,pendingOffset=null,pendingRva=null;
+  const norm=h=>h.replace(/^0x/i,'').toUpperCase();
+  for(let i=0;i<n;i++){
+    const line=lines[i].trimEnd();
+    const trimmed=line.trim();
+    const classMatch=trimmed.match(/^(?:(?:public|internal|private|protected|abstract|sealed|static|partial)\s+)*(?:class|struct|interface)\s+([\w`]+)(?:\s*<[^>]*>)?(?:\s*:\s*[^{]+)?\s*(?:\/\/.*)?$/);
+    if(classMatch){currentClass=classMatch[1].replace(/`\d+$/,'');depth=0;inTypeBody=false;}
+    const opens=(line.match(/\{/g)||[]).length;
+    const closes=(line.match(/\}/g)||[]).length;
+    if(currentClass!==null){
+      depth+=opens-closes;
+      if(depth>0)inTypeBody=true;
+      if(inTypeBody&&depth<=0){currentClass=null;depth=0;inTypeBody=false;}
+    }
+    const rvaMatch=trimmed.match(/\/\/\s*RVA:\s*(0x[0-9A-Fa-f]+)\s+Offset:\s*(0x[0-9A-Fa-f]+)/i);
+    if(rvaMatch){pendingRva=norm(rvaMatch[1]);pendingOffset=norm(rvaMatch[2]);expectMethod=true;continue;}
+    if(expectMethod){
+      expectMethod=false;
+      if(pendingOffset!==null){
+        const sigRaw=trimmed.replace(/\/\/.*$/,'').trim();
+        if(sigRaw&&/\(/.test(sigRaw)){
+          const methodNameMatch=sigRaw.match(/(\w+)\s*\(/);
+          const methodName=methodNameMatch?methodNameMatch[1]:null;
+          if(methodName){
+            const paramStr=sigRaw.match(/\(([^)]*)\)/)?.[1]??'';
+            const arity=paramStr.trim()===''?0:(paramStr.split(',').length);
+            const cls=currentClass||'_global_';
+            const identity=`${cls}::${methodName}#${arity}`;
+            const identityBare=`${cls}::${methodName}`;
+            const entry={className:cls,methodName,sig:sigRaw,arity,identity,identityBare};
+            if(!methodByOffset.has(pendingOffset))methodByOffset.set(pendingOffset,[]);
+            methodByOffset.get(pendingOffset).push(entry);
+            if(!offsetByIdentity.has(identity))offsetByIdentity.set(identity,pendingOffset);
+            if(!offsetByIdentity.has(identityBare))offsetByIdentity.set(identityBare,pendingOffset);
+            if(!methodByRva.has(pendingRva))methodByRva.set(pendingRva,[]);
+            methodByRva.get(pendingRva).push(entry);
+            if(!rvaByIdentity.has(identity))rvaByIdentity.set(identity,pendingRva);
+            if(!rvaByIdentity.has(identityBare))rvaByIdentity.set(identityBare,pendingRva);
+          }
+        }
+        pendingOffset=null;pendingRva=null;
+      }
+    }
+    const fieldMatch=line.match(/^[\t ]+.+?(\w+)\s*;\s*\/\/\s*(0x[0-9A-Fa-f]+)\s*$/);
+    if(fieldMatch&&currentClass){
+      const fieldName=fieldMatch[1];
+      const hexKey=norm(fieldMatch[2]);
+      const cls=currentClass;
+      const identity=`${cls}::${fieldName}`;
+      const entry={className:cls,fieldName,identity};
+      if(!fieldByOffset.has(hexKey))fieldByOffset.set(hexKey,[]);
+      fieldByOffset.get(hexKey).push(entry);
+      if(!offsetByIdentity.has(identity))offsetByIdentity.set(identity,hexKey);
+    }
+  }
+  return{fieldByOffset,methodByOffset,methodByRva,offsetByIdentity,rvaByIdentity};
+}
+
+let _cache={old:null,oldSrc:'',new:null,newSrc:''};
+function getIdx(dumpText,which){
+  if(_cache[which]&&_cache[which+'Src']===dumpText)return _cache[which];
+  _cache[which]=buildIndex(dumpText);_cache[which+'Src']=dumpText;
+  return _cache[which];
+}
+
+function identityAtOffset(dumpText,hexStr,which){
+  const idx=getIdx(dumpText,which);
+  const key=hexStr.replace(/^0x/i,'').toUpperCase();
+  const val=parseInt(key,16);
+  // small values are field offsets; big values are method RVA / Offset
+  const order=val<0x1000?['field','rva','offset']:['rva','offset','field'];
+  for(const kind of order){
+    if(kind==='field'){
+      const fields=idx.fieldByOffset.get(key);
+      if(fields&&fields.length){const fe=fields[0];return{kind:'field',identity:fe.identity,identityBare:fe.identity,className:fe.className,name:fe.fieldName};}
+    }else{
+      const methods=(kind==='rva'?idx.methodByRva:idx.methodByOffset).get(key);
+      if(methods&&methods.length){const me=methods[0];return{kind:'method',addr:kind,identity:me.identity,identityBare:me.identityBare,className:me.className,name:me.methodName,arity:me.arity};}
+    }
+  }
+  return null;
+}
+
+function offsetForIdentity(dumpText,entry,which){
+  const idx=getIdx(dumpText,which);
+  const useRva=entry.kind==='method'&&entry.addr==='rva';
+  const idMap=useRva?idx.rvaByIdentity:idx.offsetByIdentity;
+  const methodMap=useRva?idx.methodByRva:idx.methodByOffset;
+  let key=idMap.get(entry.identity);
+  if(key)return'0x'+key;
+  if(entry.identityBare){key=idMap.get(entry.identityBare);if(key)return'0x'+key;}
+  if(entry.kind==='field'){
+    for(const[k,list]of idx.fieldByOffset){for(const fe of list){if(fe.fieldName===entry.name&&fe.className===entry.className)return'0x'+k;}}
+  }else{
+    for(const[k,list]of methodMap){for(const me of list){if(me.methodName===entry.name&&me.className===entry.className&&(entry.arity===undefined||me.arity===entry.arity))return'0x'+k;}}
+    for(const[k,list]of methodMap){for(const me of list){if(me.methodName===entry.name&&me.className===entry.className)return'0x'+k;}}
+  }
+  return null;
+}
+
+const SKIP_FILENAMES=new Set(['md5.cpp','md5.h','md5.cc','json.hpp','json_fwd.hpp','json.h','imgui.cpp','imgui.h','imgui_draw.cpp','imgui_widgets.cpp','imgui_tables.cpp','imgui_impl_android.cpp','imgui_impl_android.h','imgui_impl_opengl3.cpp','imgui_impl_opengl3.h','imgui_impl_opengl3_loader.h','imgui_internal.h','imconfig.h','imgui_settings.h','imstb_truetype.h','imstb_rectpack.h','imstb_textedit.h','stb_image.cpp','stb_image.h','substratehook.cpp','substratehook.h','substratearm.hpp','substratex86.hpp','substratedebug.cpp','substratedebug.hpp','substrateposixmemory.cpp','substractlog.hpp','cydiasubstrate.h','and64inlinehook.cpp','and64inlinehook.hpp','hde64.c','hde64.h','table64.h','zip_utf-8.c','tls1.h','ssl.h','ssl2.h','ssl3.h','opensslv.h','evp.h','asn1.h','bio.h','bn.h','crypto.h','rsa.h','dsa.h','ec.h','engine.h','err.h','dh.h','oxorany.h','oxorany_bak.h','oxorany_include.h','oxorany.cpp','font.h','fonts.h','icon.h','iconcpp.h','ifontsch.h','fontch.h','astral.h','bg.h','dot.h','special.h','patchprotect.h','utils.h','ifontsch.h','imguipp.cpp','imguipp.h','call_imgui.h','imgui_mod.h','runtime_preview_helpers.h','runtime_preview_menu.h','imgui_settings.h','scanengine.hpp','constructorhook.hpp','get_device_api_level_inlines.h','custom_widgets.cpp','custom_widgets.hpp','box_shadow.cpp','box_shadow.h']);
+
+function isSkippedFile(filename){return SKIP_FILENAMES.has(filename.toLowerCase());}
+
+const LINE_HAS_OFFSET=/(?:\w[\w\s*]*;\s*\/\/\s*0[xX][0-9A-Fa-f]{2,8}\s*$|(?<![%*\/])\s*\+\s*0[xX][0-9A-Fa-f]{2,8}\b(?!\s*[+\-*\/%])|getAbsoluteAddress\s*\([^)]*,\s*0[xX][0-9A-Fa-f]{2,8}|Tools::Hook\s*\([\s\S]*?,\s*0[xX][0-9A-Fa-f]{2,8}|(?:createWithHex|DobbyHook)[^,]*,\s*0[xX][0-9A-Fa-f]{2,8}|(?:\w+\.)?MemoryPatch\s*\([^,]*,\s*0[xX][0-9A-Fa-f]{2,8}|HOOK_LIB\s*\([^,)]+,\s*"0[xX][0-9A-Fa-f]{2,8}"|[Oo]ffset\s*[\(=:]\s*0[xX][0-9A-Fa-f]{2,8}|[Rr][Vv][Aa]\s*[\(=:]\s*0[xX][0-9A-Fa-f]{2,8}|ReadOffset[^(]*\(\s*[^,)]+,\s*0[xX][0-9A-Fa-f]{2,8})/m;
+
+function hasGameOffsets(content,filename){
+  if(filename&&isSkippedFile(filename))return false;
+  return LINE_HAS_OFFSET.test(content);
+}
+
+function extractHexOffsets(content,filename){
+  if(filename&&isSkippedFile(filename))return new Set();
+  const found=new Set();
+  const lines=content.split('\n');
+  for(const line of lines){
+    if(!LINE_HAS_OFFSET.test(line))continue;
+    const fieldComment=line.match(/\w[\w\s*]*;\s*\/\/\s*(0[xX][0-9A-Fa-f]{2,8})\s*$/);
+    if(fieldComment){const v=parseInt(fieldComment[1],16);if(v>=0x10&&v<=0x0FFFFFFF)found.add(fieldComment[1].toLowerCase());continue;}
+    const hookLib=line.match(/HOOK_LIB\s*\([^,)]+,\s*"(0[xX][0-9A-Fa-f]{2,8})"/i);
+    if(hookLib){const v=parseInt(hookLib[1],16);if(v>=0x10&&v<=0x0FFFFFFF)found.add(hookLib[1].toLowerCase());continue;}
+    // Lua: HexPatches.MemoryPatch("lib", 0xOFFSET, ...)
+    const luaPatch=line.match(/(?:\w+\.)?MemoryPatch\s*\([^,]*,\s*(0[xX][0-9A-Fa-f]{4,9})\s*,/i);
+    if(luaPatch){const v=parseInt(luaPatch[1],16);if(v>=0x1000&&v<=0x0FFFFFFF)found.add(luaPatch[1].toLowerCase());continue;}
+    const re=/\b(0[xX][0-9A-Fa-f]{2,8})\b/g;let m;
+    while((m=re.exec(line))!==null){
+      const v=parseInt(m[1],16);
+      // Skip ARGB colors (0xFF______) and tiny values
+      if(v>=0xFF000000)continue;
+      if(v>=0x1000&&v<=0x0FFFFFFF)found.add(m[1].toLowerCase());
+    }
+  }
+  return found;
+}
+
+function processContent(content,oldTxt,newTxt,filename){
+  const hexOffsets=extractHexOffsets(content,filename);
+  let changed=0,same=0,miss=0;
+  const results=[];
+  for(const rawHex of hexOffsets){
+    const oldHex=rawHex;
+    let entry=identityAtOffset(oldTxt,oldHex,'old');
+    if(!entry){
+      const inNew=identityAtOffset(newTxt,oldHex,'new');
+      if(inNew){same++;results.push({type:'same',old:oldHex,note:'already matches new dump'});}
+      else{miss++;results.push({type:'miss',old:oldHex,msg:'not in old or new dump'});}
+      continue;
+    }
+    const newHexRaw=offsetForIdentity(newTxt,entry,'new');
+    if(!newHexRaw){miss++;results.push({type:'miss',old:oldHex,msg:`no new offset for: ${entry.identity.substring(0,50)}`});continue;}
+    const newHexNorm=newHexRaw.toLowerCase();
+    if(newHexNorm===oldHex){same++;results.push({type:'same',old:oldHex});}
+    else{
+      const escaped=oldHex.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const re=new RegExp('(?<![0-9a-fA-F])'+escaped+'(?![0-9a-fA-F])','gi');
+      const newDigits=newHexRaw.replace(/^0x/i,'');
+      content=content.replace(re,(match)=>{
+        const hasUpper=/[A-F]/.test(match);const hasLower=/[a-f]/.test(match);
+        const digits=(hasUpper&&!hasLower)?newDigits.toUpperCase():newDigits.toLowerCase();
+        const prefix=match.startsWith('0X')?'0X':'0x';
+        return prefix+digits;
+      });
+      changed++;
+      results.push({type:'changed',old:oldHex,new:'0x'+newDigits.toUpperCase(),label:`[${entry.kind==='method'?entry.addr.toUpperCase():'FIELD'}] `+entry.identity.substring(0,55).trim()});
+    }
+  }
+  return{content,changed,same,miss,results};
+}
+
+// ── RUN ───────────────────────────────────────────────────────
+async function _runUpdate(){
+  $('btn-run').disabled=true;$('btn-dl').classList.remove('vis');
+  updatedBlob=null;$('log').innerHTML='';
+  $('s-changed').textContent='—';$('s-same').textContent='—';$('s-miss').textContent='—';
+  _cache={old:null,oldSrc:'',new:null,newSrc:''};
+  log('// initializing...','inf');
+  setProgress(5,'reading dumps...');
+  log(`// old dump: ${(oldText.length/1024/1024).toFixed(2)} MB  |  new dump: ${(newText.length/1024/1024).toFixed(2)} MB`,'inf');
+  log('// building index from old dump...','inf');setProgress(10,'indexing old dump...');
+  const oldIdx=getIdx(oldText,'old');
+  log(`// old index: ${oldIdx.fieldByOffset.size} fields, ${oldIdx.methodByOffset.size} methods`,'ok');
+  log('// building index from new dump...','inf');setProgress(18,'indexing new dump...');
+  const newIdx=getIdx(newText,'new');
+  log(`// new index: ${newIdx.fieldByOffset.size} fields, ${newIdx.methodByOffset.size} methods`,'ok');
+  setProgress(25,'processing source...');
+  let totalChanged=0,totalSame=0,totalMiss=0;
+  if(isZip(srcFile)){
+    let zip;
+    try{zip=await JSZip.loadAsync(await readAB(srcFile));}
+    catch(e){log('// ERR reading zip: '+e.message,'err');$('btn-run').disabled=false;return;}
+    const targets={};
+    zip.forEach((path,file)=>{if(/\.(h|hpp|cpp|c|lua)$/i.test(path))targets[path]=file;});
+    if(!Object.keys(targets).length){log('// ERR: no source files found in zip','err');$('btn-run').disabled=false;return;}
+    log(`// ${Object.keys(targets).length} source file(s) in zip`,'inf');
+    const outZip=new JSZip();
+    zip.forEach((path,file)=>{if(!targets[path])outZip.file(path,file.async('arraybuffer'));});
+    let i=0;
+    for(const[path,file]of Object.entries(targets)){
+      i++;
+      const fname=path.split('/').pop();
+      setProgress(25+Math.round((i/Object.keys(targets).length)*65),`processing ${fname}...`);
+      let content=await file.async('string');
+      if(!hasGameOffsets(content,fname)){log(`// skipped ${fname} — no IL2CPP offset usage`,'inf');outZip.file(path,content);continue;}
+      log(`\n// ── ${fname} ──`,'inf');
+      const res=processContent(content,oldText,newText,fname);
+      for(const r of res.results){
+        if(r.type==='changed')log(`[UPD] ${r.old} -> ${r.new}  ${r.label}`,'chg');
+        else if(r.type==='same')log(`[===] ${r.old}${r.note?' // '+r.note:''}`,'inf');
+        else log(`[MIS] ${r.old}  // ${r.msg}`,'wrn');
+      }
+      log(`// ${fname}: ${res.changed} updated, ${res.same} same, ${res.miss} not found`,'ok');
+      totalChanged+=res.changed;totalSame+=res.same;totalMiss+=res.miss;
+      outZip.file(path,res.content);
+    }
+    setProgress(95,'building archive...');
+    updatedBlob=await outZip.generateAsync({type:'blob',compression:'DEFLATE'});
+    updatedFileName=srcFile.name.replace(/(\.zip)?$/i,'_updated.zip');
+  }else{
+    let content;
+    try{content=await readText(srcFile);}
+    catch(e){log('// ERR '+e.message,'err');$('btn-run').disabled=false;return;}
+    if(!hasGameOffsets(content,srcFile.name)){
+      log('// no IL2CPP offset usage found — skipped','wrn');
+      $('s-changed').textContent=0;$('s-same').textContent=0;$('s-miss').textContent=0;
+      updatedBlob=new Blob([content],{type:'text/plain'});
+      const ext=srcFile.name.split('.').pop();
+      updatedFileName=srcFile.name.replace('.'+ext,'_updated.'+ext);
+      $('btn-dl').textContent=`Download ${updatedFileName}`;
+      $('btn-dl').classList.add('vis');setProgress(100,'complete!');$('btn-run').disabled=false;return;
+    }
+    log(`\n// ── ${srcFile.name} ──`,'inf');setProgress(60,`processing ${srcFile.name}...`);
+    const res=processContent(content,oldText,newText,srcFile.name);
+    for(const r of res.results){
+      if(r.type==='changed')log(`[UPD] ${r.old} -> ${r.new}  ${r.label}`,'chg');
+      else if(r.type==='same')log(`[===] ${r.old}${r.note?' // '+r.note:''}`,'inf');
+      else log(`[MIS] ${r.old}  // ${r.msg}`,'wrn');
+    }
+    totalChanged=res.changed;totalSame=res.same;totalMiss=res.miss;
+    updatedBlob=new Blob([res.content],{type:'text/plain'});
+    const ext=srcFile.name.split('.').pop();
+    updatedFileName=srcFile.name.replace('.'+ext,'_updated.'+ext);
+    setProgress(95,'done!');
+  }
+  $('s-changed').textContent=totalChanged;
+  $('s-same').textContent=totalSame;
+  $('s-miss').textContent=totalMiss;
+  log(`\n// complete — ${totalChanged} offset(s) updated, ${totalMiss} not found`,'ok');
+  $('btn-dl').textContent=`Download ${updatedFileName}`;
+  $('btn-dl').classList.add('vis');setProgress(100,'complete!');
+  $('btn-run').disabled=false;
+}
+
+async function runUpdate(){
+  const b=$('btn-run');
+  b.classList.remove('done');b.classList.add('running');b.textContent='Updating…';
+  // let the browser paint the color change before the heavy work starts
+  await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,30)));
+  let ok=true;
+  try{await _runUpdate();}catch(e){ok=false;log('// ERR '+e.message,'err');}
+  b.classList.remove('running');
+  if(ok&&$('btn-dl').classList.contains('vis')){b.classList.add('done');b.textContent='✓ Updated';}
+  else b.textContent='Update offsets';
+  b.disabled=!(srcFile&&oldText&&newText);
+}
+$('btn-run').addEventListener('click',runUpdate);
+$('btn-dl').addEventListener('click',()=>{
+  if(!updatedBlob)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(updatedBlob);
+  a.download=updatedFileName;a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+async function loadSaved(){
+  try{
+    const[oldTxt,oldName,newTxt,newName]=await Promise.all([dbGet('dump_old'),dbGet('dump_old_name'),dbGet('dump_new'),dbGet('dump_new_name')]);
+    if(oldTxt&&oldName){oldText=oldTxt;setDumpUI('old',oldName);log(`// old dump restored: ${oldName}`,'ok');}
+    if(newTxt&&newName){newText=newTxt;setDumpUI('new',newName);log(`// new dump restored: ${newName}`,'ok');}
+    if(!oldTxt&&!newTxt)log('// no saved dumps — upload to get started','inf');
+    updateStatus();
+  }catch(e){log('// could not restore saved dumps','wrn');}
+}
+loadSaved();
+</script>
+</body>
+</html>
