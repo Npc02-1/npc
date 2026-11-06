@@ -3,147 +3,180 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NPC OFFSET UPDATER</title>
+<title>Offset Updater</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0e0e10;--card:#151518;--card2:#1b1b1f;--line:#2b2b30;--red:#e0201f;--redbg:#2a1214;--ok:#34d399;--okbg:#14302a;--warn:#fbbf24;--txt:#f2f2f4;--dim:#8b8b93;--mono:'JetBrains Mono','SF Mono',ui-monospace,Consolas,monospace}
+:root{--bg:#0c0d1a;--s1:#141630;--s2:#1b1e3f;--line:#2a2e5a;--tx:#ecebf8;--mute:#8d90b8;--old:#ff8a73;--oldbg:#3a1f2a;--new:#c8f53c;--newbg:#26340f;--info:#7c8cff;--infobg:#20265a;--warn:#ffc857;--warnbg:#3a2f12;--err:#ff6b81;--head:'Sora',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,'SF Mono',Consolas,monospace}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono);min-height:100vh;-webkit-font-smoothing:antialiased}
-.app{max-width:760px;margin:0 auto;padding:22px 16px 60px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:26px}
-.brand{display:flex;align-items:center;gap:12px;color:var(--red);font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase}
-.brand i{width:14px;height:14px;background:var(--red);transform:rotate(45deg);border-radius:3px}
-.ver{border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-size:12px;color:var(--dim);letter-spacing:.12em}
-h1{margin:0 0 14px;font-size:clamp(38px,10vw,58px);font-weight:800;line-height:1.05;letter-spacing:-.01em}
-h1 em{font-style:normal;color:var(--red)}
-.lead{margin:0 0 30px;color:var(--dim);font-size:14px;line-height:1.75}
-.chip{display:inline-block;border:1px solid var(--line);background:var(--card);border-radius:7px;padding:2px 10px;color:#cfcfd6;font-size:13px;word-spacing:6px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:22px;margin-bottom:18px}
-.ph{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-.ph-l{display:flex;align-items:center;gap:14px;font-size:19px;font-weight:700}
-.num{background:var(--redbg);color:var(--red);border-radius:10px;padding:8px 12px;font-size:15px;font-weight:700}
-.pill{border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:11px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;text-align:center}
-.status{display:flex;align-items:center;gap:14px;background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:22px;font-size:16px;color:#d6d6dc}
-.status b{width:22px;height:22px;border-radius:50%;background:#4a4a52;flex:none;border:5px solid #2a2a2f}
-.status.ok b{background:var(--ok);border-color:#1d4a3d}
-.lbl{font-size:12px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;margin:0 0 10px}
-.card{display:block;cursor:pointer;background:var(--card2);border:1.5px solid var(--line);border-radius:22px;padding:20px;margin-bottom:22px;transition:.18s}
-.card:hover{border-color:#44444b}
-.card.drag{border-color:var(--red)}
-.card.loaded{background:var(--okbg);border-color:var(--ok)}
-.card.error{border-color:var(--red);background:var(--redbg)}
-.fname{font-size:18px;font-weight:600;word-break:break-all;color:#cfcfd6}
-.card.loaded .fname{color:var(--ok)}
-.fmeta{font-size:13px;color:var(--dim);margin:8px 0 18px;letter-spacing:.04em}
-.row{display:flex;gap:12px}
-.loadbtn{flex:1;text-align:center;border:1px solid #3a3a41;background:rgba(255,255,255,.03);border-radius:16px;padding:18px 0;font-size:17px;font-weight:600;color:var(--txt)}
-.card.loaded .loadbtn{border-color:#2f4b45}
-.xbtn{width:74px;padding:0;border:1px solid #3a3a41;background:rgba(255,255,255,.03);color:var(--red);border-radius:16px;font-size:24px;font-family:var(--mono);cursor:pointer}
-.xbtn:hover{background:var(--redbg)}
-.drop{border-style:dashed;border-width:2px;text-align:center;padding:34px 18px 22px;margin-bottom:0}
-.drop .fname{font-size:20px;line-height:1.5;color:#cfcfd6}
-.drop .fmeta{margin-bottom:16px}
-.drop .row{margin-top:6px}
-.ctrl-row{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
-.ctrl,.switch{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.1em;color:#c9c9d0;text-transform:uppercase;cursor:pointer}
-select{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-family:var(--mono);font-size:13px;outline:0}
-.switch input{display:none}
-.track{width:42px;height:24px;border-radius:999px;background:#2d2d33;border:1px solid var(--line);position:relative;transition:.2s}
-.track::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#8b8b93;transition:.2s}
-.switch input:checked+.track{background:var(--red);border-color:var(--red)}
-.switch input:checked+.track::after{left:21px;background:#fff}
-.actions{display:flex;flex-wrap:wrap;gap:12px}
-button{font-family:var(--mono);font-size:14px;font-weight:700;padding:18px 22px;border-radius:16px;cursor:pointer;border:1px solid #3a3a41;background:var(--card2);color:var(--txt);transition:.15s}
-button:hover:not(:disabled){border-color:var(--red)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:14px;line-height:1.55;min-height:100vh;background-image:radial-gradient(#23275a 1px,transparent 1.2px);background-size:26px 26px}
+.app{max-width:800px;margin:0 auto;padding:34px 16px 80px}
+:focus-visible{outline:3px solid var(--info);outline-offset:3px}
+.hero{padding:6px 0 38px}
+.ver{font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.morph{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px;margin:26px 0 8px;font-weight:700;font-size:clamp(26px,7.4vw,50px);letter-spacing:-.03em;line-height:1.15}
+.morph .o{color:var(--old);text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:rgba(255,138,115,.55)}
+.morph .a{color:var(--mute);font-weight:400}
+.morph .n{color:var(--new)}
+h1{font-family:var(--head);font-weight:800;font-size:clamp(34px,9vw,54px);letter-spacing:-.04em;line-height:1;margin:0 0 14px}
+.lead{max-width:54ch;margin:0;color:var(--mute)}
+.fmts{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.fmts b{font-weight:500;background:var(--s1);border:1px solid var(--line);border-radius:7px;padding:2px 9px;font-size:12px}
+.steps{position:relative;padding-left:46px}
+.steps::before{content:"";position:absolute;left:15px;top:12px;bottom:12px;width:2px;background:linear-gradient(var(--info),var(--line) 40%,var(--line))}
+.step{position:relative;background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:22px}
+.step>.num{position:absolute;left:-46px;top:18px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--bg);border:2px solid var(--info);color:var(--info);font-weight:700;font-size:13px}
+.step.free{background:transparent;border-style:dashed}
+.step.free>.num{border-color:var(--line);color:var(--mute)}
+.ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.ph h2{margin:0;font-family:var(--head);font-size:21px;font-weight:700;letter-spacing:-.02em}
+.pill{font-size:12px;color:var(--mute)}
+.status{display:flex;align-items:center;gap:10px;background:var(--s2);border-radius:12px;padding:11px 14px;margin-bottom:16px;font-size:13px;color:var(--mute)}
+.status b{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}
+.status.ok{background:var(--newbg);color:var(--new)}.status.ok b{background:var(--new);box-shadow:0 0 0 4px rgba(200,245,60,.18)}
+.pair{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:640px){.pair{grid-template-columns:1fr 1fr}}
+.lbl{font-family:var(--head);font-size:14px;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.lbl::before{content:"";width:10px;height:10px;border-radius:3px}
+.lbl.o::before{background:var(--old)}.lbl.n::before{background:var(--new)}
+.card{display:flex;flex-direction:column;cursor:pointer;background:var(--s2);border:2px dashed var(--line);border-radius:16px;padding:16px;margin:0;transition:border-color .15s,background .15s}
+.card:hover{border-color:var(--info)}
+.card.drag{border-color:var(--info);background:var(--infobg)}
+.card.loaded{border-style:solid}
+.card.o.loaded{border-color:var(--old);background:var(--oldbg)}
+.card.n.loaded{border-color:var(--new);background:var(--newbg)}
+.card.t.loaded{border-color:var(--info);background:var(--infobg)}
+.card.error{border:2px solid var(--err);background:#3a1522}
+.fname{font-size:15px;font-weight:700;word-break:break-all;min-height:46px}
+.fmeta{font-size:12px;color:var(--mute);margin:4px 0 14px}
+.card.saved .fmeta::before{content:"\25CF  ";color:var(--new)}
+.card.error .fmeta{color:var(--err)}
+.row{display:flex;gap:8px;margin-top:auto}
+.loadbtn{flex:1;text-align:center;background:var(--tx);color:var(--bg);border-radius:11px;padding:11px 0;font-weight:700}
+.xbtn{width:46px;padding:0;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:11px;font-size:15px}
+.xbtn:hover{background:#3a1522;color:var(--err);border-color:var(--err)}
+.keep{margin:14px 0 0;font-size:12px;color:var(--mute)}
+.ctrl-row{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center}
+.ctrl{display:flex;align-items:center;gap:10px;font-size:13px}
+select{background:var(--s2);color:var(--tx);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-family:var(--mono);font-size:13px}
+.switch{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.track{width:42px;height:24px;border-radius:999px;background:var(--line);position:relative;transition:background .15s;flex:none}
+.track::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--tx);transition:left .15s}
+.switch input:checked+.track{background:var(--new)}.switch input:checked+.track::after{left:21px;background:var(--bg)}
+.switch input:focus-visible+.track{outline:3px solid var(--info);outline-offset:3px}
+.hint{margin:12px 0 0;font-size:12px;color:var(--mute)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+button{font-family:var(--mono);font-size:14px;font-weight:700;padding:14px 18px;border-radius:12px;cursor:pointer;border:1px solid var(--line);background:var(--s2);color:var(--tx)}
+button:hover:not(:disabled){border-color:var(--info)}
 button:disabled{opacity:.35;cursor:not-allowed}
-#btnStart{flex:1 1 100%;background:var(--red);border-color:var(--red);font-size:16px}
-#btnStart:hover:not(:disabled){filter:brightness(1.12)}
-#btnSave{flex:1}#btnClear{flex:1}
-.prog-head{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
-.bar{height:8px;border-radius:999px;background:#25252a;overflow:hidden}
-.fill{height:100%;width:0;background:var(--red);border-radius:999px;transition:width .18s linear}
-#logBox{height:280px;overflow-y:auto;font-size:12px;line-height:1.7;background:#0b0b0d;border:1px solid var(--line);border-radius:16px;padding:14px}
-.ln{white-space:pre-wrap;word-break:break-word}.ln .t{color:#55555d;margin-right:9px}
-.l-sys{color:var(--red)}.l-info{color:#a8a8b0}.l-ok{color:var(--ok)}.l-warn{color:var(--warn)}.l-err{color:#ff6b6b}.l-hit{color:#ff8a80}
-.stats{display:none;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}.stats.show{display:grid}
-.stat{padding:16px 10px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-align:center}
-.stat b{display:block;font-size:21px;font-weight:800}
-.stat span{font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
-.stat.g b{color:var(--ok)}.stat.c b{color:var(--red)}.stat.w b{color:var(--warn)}.stat.r b{color:#ff6b6b}
-.res-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
-.tabs{display:flex;flex-wrap:wrap;gap:8px}
-.tab{padding:9px 14px;border-radius:999px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;display:inline-flex;gap:8px;align-items:center;color:var(--dim)}
-.tab.active{background:var(--red);border-color:var(--red);color:#fff}
-.tab .cnt{font-size:10px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.14)}
-#resSearch{flex:1 1 100%;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 15px;color:var(--txt);font-family:var(--mono);font-size:13px;outline:0}
-#resSearch:focus{border-color:var(--red)}
-.res-table-wrap{max-height:430px;overflow:auto;border:1px solid var(--line);border-radius:16px;background:#0b0b0d}
-table{width:100%;border-collapse:collapse;font-size:11.5px}
-thead th{position:sticky;top:0;text-align:left;padding:11px 12px;letter-spacing:.16em;font-size:10px;text-transform:uppercase;color:var(--dim);background:#18181b;border-bottom:1px solid var(--line);white-space:nowrap}
-tbody td{padding:9px 12px;border-bottom:1px solid #1d1d21;color:#c4c4cb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
-tbody tr:hover{background:#17171a}
-td.cp{cursor:pointer}td.cp:hover{color:var(--red)}
-.o-hex{color:#a8a8b0}.n-hex{color:var(--red);font-weight:700}
-.st{font-size:10px;letter-spacing:.1em;padding:3px 9px;border-radius:999px;border:1px solid}
-.st-0{color:var(--ok);border-color:#1f6b55}.st-1{color:#a8a8b0;border-color:#3a3a41}.st-2{color:var(--warn);border-color:#7a5a12}.st-3{color:#ff6b6b;border-color:#7a2a2a}
-.res-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--dim)}
-.res-empty{padding:44px 16px;text-align:center;color:#5a5a62;font-size:11px;letter-spacing:.14em}
-.btn-sm{padding:11px 16px;font-size:11px;border-radius:12px}
-.notice{display:none;font-size:11px;color:var(--warn);background:#2a2008;border:1px solid #6b5212;border-radius:12px;padding:10px 12px;margin-bottom:12px}.notice.show{display:block}
-footer{text-align:center;margin-top:30px;font-size:10px;letter-spacing:.22em;color:#4a4a52;text-transform:uppercase}
+#btnStart{flex:1 1 100%;background:var(--new);border-color:var(--new);color:#10140a;font-family:var(--head);font-size:18px;font-weight:800;padding:17px}
+#btnStart:hover:not(:disabled){filter:brightness(1.08)}
+#btnSave{flex:1;background:var(--info);border-color:var(--info);color:#0c0d1a}
+#btnClear{flex:1}
+.stats{display:none;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-top:18px}.stats.show{display:grid}
+.stat{padding:12px;border-radius:12px;background:var(--s2)}
+.stat b{display:block;font-family:var(--head);font-size:25px;font-weight:800;line-height:1.1}
+.stat span{font-size:12px;color:var(--mute)}
+.stat.g b{color:var(--new)}.stat.w b{color:var(--warn)}.stat.r b{color:var(--err)}
+.prog-head{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin:20px 0 8px}
+.bar{height:10px;border-radius:999px;background:var(--s2);overflow:hidden}
+.fill{height:100%;width:0;background:var(--new);border-radius:999px;transition:width .18s linear}
+#logBox{height:250px;overflow-y:auto;font-size:12px;line-height:1.65;background:#080914;border:1px solid var(--line);border-radius:14px;padding:14px}
+.ln{white-space:pre-wrap;word-break:break-word}.ln .t{color:#4b5086;margin-right:9px}
+.l-sys{color:var(--info);font-weight:700}.l-info{color:#a9acd0}.l-ok{color:var(--new)}.l-warn{color:var(--warn)}.l-err{color:var(--err)}.l-hit{color:var(--warn)}
+.notice{display:none;font-size:12px;color:var(--warn);background:var(--warnbg);border-radius:10px;padding:10px 12px;margin-bottom:12px}.notice.show{display:block}
+.res-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{padding:8px 12px;border-radius:999px;font-size:12px;font-weight:500;display:inline-flex;gap:7px;align-items:center;background:transparent;color:var(--mute)}
+.tab.active{background:var(--tx);border-color:var(--tx);color:var(--bg);font-weight:700}
+.tab .cnt{font-size:11px;padding:0 7px;border-radius:999px;background:rgba(141,144,184,.25)}
+#resSearch{flex:1 1 100%;background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--tx);font-family:var(--mono);font-size:13px}
+.res-table-wrap{max-height:440px;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#080914}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{position:sticky;top:0;text-align:left;padding:10px 12px;font-size:12px;font-weight:700;color:var(--mute);background:var(--s2);white-space:nowrap}
+tbody td{padding:8px 12px;border-bottom:1px solid #181a36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+tbody tr:hover{background:#10122a}
+td.cp{cursor:copy}td.cp:hover{background:var(--infobg)}
+.o-hex{color:var(--old);text-decoration:line-through;text-decoration-color:rgba(255,138,115,.45)}
+.n-hex{color:var(--new);font-weight:700}
+.st{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+.st-0{background:var(--newbg);color:var(--new)}.st-1{background:var(--s2);color:var(--mute)}.st-2{background:var(--warnbg);color:var(--warn)}.st-3{background:#3a1522;color:var(--err)}
+.res-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--mute)}
+.res-empty{padding:40px 16px;text-align:center;color:var(--mute);font-size:13px}
+.btn-sm{padding:9px 14px;font-size:12px;border-radius:10px}
+footer{text-align:center;margin-top:8px;font-size:12px;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="top"><div class="brand"><i></i>NPC / Offset Updater</div><div class="ver">v13.0</div></div>
-<h1>Offset <em>Updater</em></h1>
-<p class="lead">Full IL2CPP identity resolution &mdash; field + RVA + Offset. Smart matching, runs on a worker thread (no freeze). <span class="chip">.cs .h .cpp .lua</span></p>
+<header class="hero">
+<span class="ver">v14.0</span>
+<div class="morph" aria-hidden="true"><span class="o" id="heroOld">0x1A4F20</span><span class="a">&rarr;</span><span class="n" id="heroNew">0x1B8C30</span></div>
+<h1>Offset Updater</h1>
+<p class="lead">Carry your offsets over to a new game build. Load the old and new dumps once, and they stay saved on this device.</p>
+<div class="fmts"><b>.cs</b><b>.h</b><b>.cpp</b><b>.lua</b></div>
+</header>
 
-<div class="panel">
-<div class="ph"><div class="ph-l"><span class="num">01</span>IL2CPP Dumps</div><div class="pill">Stays in browser</div></div>
+<div class="steps">
+<section class="step">
+<span class="num">1</span>
+<div class="ph"><h2>Old and new dumps</h2><div class="pill">Saved on this device only</div></div>
 <div class="status" id="dumpStatus"><b></b><span id="dumpStatusTxt">Load both dumps to begin</span></div>
-<div class="lbl">Old dump</div>
-<label class="card" id="cardOld"><input accept=".cs,.txt,.h,.hpp,.cpp,.json,.ini,.dat,.log,.lua" hidden type="file"><div class="fname">Drop file or tap Load</div><div class="fmeta">NO FILE SELECTED</div><div class="row"><span class="loadbtn">&#8593; Load</span><button type="button" class="xbtn" id="xOld">&#10005;</button></div></label>
-<div class="lbl">New dump</div>
-<label class="card" id="cardNew"><input accept=".cs,.txt,.h,.hpp,.cpp,.json,.ini,.dat,.log,.lua" hidden type="file"><div class="fname">Drop file or tap Load</div><div class="fmeta">NO FILE SELECTED</div><div class="row"><span class="loadbtn">&#8593; Load</span><button type="button" class="xbtn" id="xNew">&#10005;</button></div></label>
+<div class="pair">
+<div>
+<div class="lbl o">Old dump</div>
+<label class="card o" id="cardOld"><input accept=".cs,.txt,.h,.hpp,.cpp,.json,.ini,.dat,.log,.lua" hidden type="file"><div class="fname">Drop a file or tap Load</div><div class="fmeta">No file selected</div><div class="row"><span class="loadbtn">Load</span><button type="button" class="xbtn" id="xOld" aria-label="Remove old dump">&#10005;</button></div></label>
 </div>
-
-<div class="panel">
-<div class="ph"><div class="ph-l"><span class="num">02</span>Source file</div><div class="pill">.cs .h .cpp .lua + more</div></div>
-<label class="card drop" id="cardTarget"><input accept=".cs,.txt,.h,.hpp,.cpp,.json,.ini,.dat,.log,.lua" hidden type="file"><div class="fname">Upload source file to update</div><div class="fmeta">NO FILE SELECTED</div><div class="row"><span class="loadbtn">&#8593; Load</span><button type="button" class="xbtn" id="xTarget">&#10005;</button></div></label>
+<div>
+<div class="lbl n">New dump</div>
+<label class="card n" id="cardNew"><input accept=".cs,.txt,.h,.hpp,.cpp,.json,.ini,.dat,.log,.lua" hidden type="file"><div class="fname">Drop a file or tap Load</div><div class="fmeta">No file selected</div><div class="row"><span class="loadbtn">Load</span><button type="button" class="xbtn" id="xNew" aria-label="Remove new dump">&#10005;</button></div></label>
 </div>
+</div>
+<p class="keep">Dumps are kept in your browser storage, so you don't have to load them again next time. Tap &#10005; to delete a saved dump.</p>
+</section>
 
-<div class="panel">
-<div class="ph"><div class="ph-l"><span class="num">03</span>Engine options</div></div>
+<section class="step">
+<span class="num">2</span>
+<div class="ph"><h2>File to update</h2><div class="pill">.cs .h .cpp .lua and more</div></div>
+<label class="card t" id="cardTarget"><input accept=".cs,.txt,.h,.hpp,.cpp,.json,.ini,.dat,.log,.lua" hidden type="file"><div class="fname">Drop your source file here</div><div class="fmeta">No file selected</div><div class="row"><span class="loadbtn">Load</span><button type="button" class="xbtn" id="xTarget" aria-label="Remove source file">&#10005;</button></div></label>
+</section>
+
+<section class="step">
+<span class="num">3</span>
+<div class="ph"><h2>Run</h2></div>
 <div class="ctrl-row">
-<div class="ctrl"><span>Match</span><select id="matchMode"><option value="rva">RVA (recommended)</option><option value="off">Offset</option><option value="both">RVA + Offset</option></select></div>
+<div class="ctrl"><span>Match by</span><select id="matchMode"><option value="rva">RVA (recommended)</option><option value="off">Offset</option><option value="both">RVA + Offset</option></select></div>
 <label class="switch"><input id="optBrute" type="checkbox"><span class="track"></span><span>Brute-force</span></label>
 <label class="switch"><input id="optFields" type="checkbox"><span class="track"></span><span>Field offsets</span></label>
-</div></div>
-
-<div class="panel">
-<div class="ph"><div class="ph-l"><span class="num">04</span>Run</div></div>
-<div class="actions">
-<button disabled id="btnStart">&#9654; Start Update</button>
-<button disabled id="btnSave">Save File</button>
-<button id="btnClear">Clear Logs</button>
 </div>
-<div class="stats" id="stats" style="margin-top:18px;margin-bottom:0">
-<div class="stat c"><b id="stTokens">0</b><span>Tokens</span></div>
+<p class="hint">Brute-force also matches methods that moved to another class. Field offsets updates values written as <code>// 0x1C</code>.</p>
+<div class="actions">
+<button disabled id="btnStart">Start update</button>
+<button disabled id="btnSave">Save file</button>
+<button id="btnClear">Clear logs</button>
+</div>
+<div class="stats" id="stats">
+<div class="stat"><b id="stTokens">0</b><span>Tokens</span></div>
 <div class="stat g"><b id="stUpdated">0</b><span>Updated</span></div>
 <div class="stat"><b id="stSame">0</b><span>Unchanged</span></div>
 <div class="stat w"><b id="stAmbig">0</b><span>Ambiguous</span></div>
-<div class="stat r"><b id="stMiss">0</b><span>Not Found</span></div>
+<div class="stat r"><b id="stMiss">0</b><span>Not found</span></div>
 </div>
-<div style="margin-top:22px"><div class="prog-head"><span id="phaseLabel">Idle</span><span id="pctLabel">0%</span></div><div class="bar"><div class="fill" id="barFill"></div></div></div>
-</div>
+<div class="prog-head"><span id="phaseLabel">Idle</span><span id="pctLabel">0%</span></div><div class="bar"><div class="fill" id="barFill"></div></div>
+</section>
 
-<div class="panel">
-<div class="ph"><div class="ph-l"><span class="num">05</span>Console</div></div>
+<section class="step free">
+<span class="num">&gt;_</span>
+<div class="ph"><h2>Console</h2></div>
 <div id="logBox"></div>
-</div>
+</section>
 
-<div class="panel">
-<div class="ph"><div class="ph-l"><span class="num">06</span>Results</div></div>
+<section class="step free">
+<span class="num">&#10003;</span>
+<div class="ph"><h2>Results</h2><div class="pill">Tap a value to copy</div></div>
 <div class="notice" id="resNotice"></div>
 <div class="res-toolbar">
 <div class="tabs" id="resTabs">
@@ -151,19 +184,19 @@ footer{text-align:center;margin-top:30px;font-size:10px;letter-spacing:.22em;col
 <button class="tab" data-f="0">Updated <span class="cnt" id="cntUpd">0</span></button>
 <button class="tab" data-f="1">Unchanged <span class="cnt" id="cntSame">0</span></button>
 <button class="tab" data-f="2">Ambiguous <span class="cnt" id="cntAmb">0</span></button>
-<button class="tab" data-f="3">Not Found <span class="cnt" id="cntMiss">0</span></button>
+<button class="tab" data-f="3">Not found <span class="cnt" id="cntMiss">0</span></button>
 </div>
-<input id="resSearch" placeholder="Search offset / class / member..." spellcheck="false" type="search">
+<input id="resSearch" placeholder="Search by offset, class or member" spellcheck="false" type="search">
 </div>
 <div class="res-table-wrap">
-<table><thead><tr><th>Old Offset</th><th>New Offset</th><th>Status</th><th>Class</th><th>Member</th><th>Context</th></tr></thead><tbody id="resBody"></tbody></table>
-<div class="res-empty" id="resEmpty">NO RESULTS YET</div>
+<table><thead><tr><th>Old</th><th>New</th><th>Status</th><th>Class</th><th>Member</th><th>Context</th></tr></thead><tbody id="resBody"></tbody></table>
+<div class="res-empty" id="resEmpty">No results yet</div>
 </div>
-<div class="res-foot"><span id="resInfo">-</span><span style="display:flex;gap:8px"><button class="btn-sm" disabled id="btnMore">Show more</button><button class="btn-sm" disabled id="btnExport">Export Report</button></span></div>
+<div class="res-foot"><span id="resInfo">-</span><span style="display:flex;gap:8px"><button class="btn-sm" disabled id="btnMore">Show more</button><button class="btn-sm" disabled id="btnExport">Export CSV</button></span></div>
+</section>
 </div>
-<footer>NPC Offset Updater &middot; 2026</footer>
+<footer>Offset Updater &middot; 2026</footer>
 </div>
-
 <script id="workerSrc" type="text/js-worker">
 'use strict';
 const SEP='\u0001';
@@ -377,9 +410,16 @@ const logBox=$('logBox'),barFill=$('barFill'),pctLabel=$('pctLabel'),phaseLabel=
 const btnStart=$('btnStart'),btnSave=$('btnSave'),statsEl=$('stats');
 const resBody=$('resBody'),resEmpty=$('resEmpty'),resInfo=$('resInfo'),resSearch=$('resSearch'),resTabs=$('resTabs'),resNotice=$('resNotice'),btnMore=$('btnMore'),btnExport=$('btnExport');
 const STATUS_LABEL={'0':'UPDATED','1':'UNCHANGED','2':'AMBIGUOUS','3':'NOT FOUND'};
+const EMPTY_NAME={old:'Drop a file or tap Load',new:'Drop a file or tap Load',target:'Drop your source file here'};
 let worker=null,resultText=null,resultName='NPC_UPDATED.txt';
 let allRows=[],filtered=[],resFilter='all',resLimit=300,resTruncated=false;
 
+const DBN='npc-offset-updater',STORE='files';
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open(DBN,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function dbTx(mode,fn){return idb().then(d=>new Promise((res,rej)=>{const t=d.transaction(STORE,mode),rq=fn(t.objectStore(STORE));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);}));}
+async function dbPut(k,f){try{await dbTx('readwrite',s=>s.put({blob:f,name:f.name,type:f.type},k));return true;}catch(e){return false;}}
+async function dbGet(k){try{return await dbTx('readonly',s=>s.get(k));}catch(e){return null;}}
+async function dbDel(k){try{await dbTx('readwrite',s=>s.delete(k));}catch(e){}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtBytes(n){if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(2)+' MB';}
 function addLog(level,text){
@@ -396,7 +436,7 @@ function bootWorker(){
   w.onmessage=onMsg;w.onerror=e=>addLog('err','Worker error: '+(e.message||'unknown'));
   return w;
 }
-function resetBtn(){btnStart.dataset.busy='0';btnStart.textContent='▶ Start Update';}
+function resetBtn(){btnStart.dataset.busy='0';btnStart.textContent='Start update';}
 function onMsg(e){
   const m=e.data;
   if(m.type==='log')addLog(m.level,m.text);
@@ -407,29 +447,36 @@ function onMsg(e){
     resultText=m.text;barFill.style.width='100%';pctLabel.textContent='100%';phaseLabel.textContent='Complete';
     btnSave.disabled=false;btnStart.disabled=false;resetBtn();
     renderStats(m.stats);buildResults(m.rows||[],!!m.truncated);
-    addLog('ok','Output ready · click "Save File Txt" to download.');
+    addLog('ok','Output ready · tap "Save file" to download.');
   }else if(m.type==='error'){
     addLog('err','FATAL: '+m.message);phaseLabel.textContent='Error';btnStart.disabled=false;resetBtn();
   }
 }
-function setFile(key,file){
+function setFile(key,file,restored){
   const card=cards[key],nameEl=card.querySelector('.fname'),metaEl=card.querySelector('.fmeta');
   if(file.size>MAX_SIZE){
     card.classList.remove('loaded');card.classList.add('error');nameEl.textContent=file.name;
-    metaEl.textContent='REJECTED · '+fmtBytes(file.size)+' > 100 MB';picked[key]=null;
+    metaEl.textContent='Rejected · '+fmtBytes(file.size)+' is over 100 MB';picked[key]=null;
     addLog('err','File too large: '+file.name);refreshStart();return;
   }
   card.classList.remove('error');card.classList.add('loaded');
-  nameEl.textContent=file.name;metaEl.textContent=fmtBytes(file.size)+' · READY';picked[key]=file;
+  nameEl.textContent=file.name;metaEl.textContent=fmtBytes(file.size)+' · ready';picked[key]=file;
   if(key==='target')resultName='NPC_'+file.name.replace(/\.[^.]+$/,'')+'_UPDATED.txt';
-  addLog('ok','Loaded ['+key.toUpperCase()+'] '+file.name+' · '+fmtBytes(file.size));
+  addLog('ok',(restored?'Restored':'Loaded')+' ['+key.toUpperCase()+'] '+file.name+' · '+fmtBytes(file.size));
+  if(key!=='target'){
+    if(restored){card.classList.add('saved');metaEl.textContent=fmtBytes(file.size)+' · saved on this device';}
+    else dbPut(key,file).then(ok=>{
+      if(ok&&picked[key]===file){card.classList.add('saved');metaEl.textContent=fmtBytes(file.size)+' · saved on this device';addLog('ok','Saved ['+key.toUpperCase()+'] for next time');}
+      else if(!ok)addLog('warn','Could not save ['+key.toUpperCase()+'] in this browser. You will need to load it again next time.');
+    });
+  }
   refreshStart();
 }
 function refreshStart(){
   btnStart.disabled=!(picked.old&&picked.new&&picked.target)||btnStart.dataset.busy==='1';
   const ds=$('dumpStatus'),both=picked.old&&picked.new;
   ds.classList.toggle('ok',!!both);
-  $('dumpStatusTxt').textContent=both?'Both dumps loaded \u2014 ready!':(picked.old||picked.new?'Load the other dump to continue':'Load both dumps to begin');
+  $('dumpStatusTxt').textContent=both?'Both dumps loaded \u2014 ready':(picked.old||picked.new?'Load the other dump to continue':'Load both dumps to begin');
 }
 ['old','new','target'].forEach(function(key){
   const card=cards[key],input=card.querySelector('input[type=file]');
@@ -445,7 +492,7 @@ function renderStats(s){
 }
 function resetResults(){
   allRows=[];filtered=[];resFilter='all';resLimit=300;resTruncated=false;
-  resBody.innerHTML='';resEmpty.style.display='';resEmpty.textContent='NO RESULTS YET · RUN AN UPDATE TO POPULATE';
+  resBody.innerHTML='';resEmpty.style.display='';resEmpty.textContent='No results yet. Run an update to fill this table.';
   resInfo.textContent='-';resNotice.classList.remove('show');btnMore.disabled=true;btnExport.disabled=true;
   ['cntAll','cntUpd','cntSame','cntAmb','cntMiss'].forEach(id=>$(id).textContent='0');
   resTabs.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.f==='all'));
@@ -477,7 +524,7 @@ function td(text,cls,copy){
 function renderTable(){
   if(allRows.length===0){resBody.innerHTML='';resEmpty.style.display='';resInfo.textContent='-';btnMore.disabled=true;btnExport.disabled=true;return;}
   if(filtered.length===0){
-    resBody.innerHTML='';resEmpty.style.display='';resEmpty.textContent='NO ROWS MATCH THE CURRENT FILTER / SEARCH';
+    resBody.innerHTML='';resEmpty.style.display='';resEmpty.textContent='No rows match this filter or search.';
     resInfo.textContent='0 of '+allRows.length.toLocaleString()+' captured rows';btnMore.disabled=true;btnExport.disabled=true;return;
   }
   resEmpty.style.display='none';
@@ -543,18 +590,30 @@ btnSave.addEventListener('click',function(){
   download(new Blob([resultText],{type:'text/plain;charset=utf-8'}),resultName);
   addLog('ok','Saved as '+resultName);
 });
-[['old','xOld','Drop file or tap Load'],['new','xNew','Drop file or tap Load'],['target','xTarget','Upload source file to update']].forEach(function(a){
+[['old','xOld'],['new','xNew'],['target','xTarget']].forEach(function(a){
   $(a[1]).addEventListener('click',function(e){
     e.preventDefault();e.stopPropagation();
-    const c=cards[a[0]];c.classList.remove('loaded','error');
-    c.querySelector('.fname').textContent=a[2];c.querySelector('.fmeta').textContent='NO FILE SELECTED';
-    c.querySelector('input').value='';picked[a[0]]=null;refreshStart();
+    const c=cards[a[0]];c.classList.remove('loaded','error','saved');
+    c.querySelector('.fname').textContent=EMPTY_NAME[a[0]];c.querySelector('.fmeta').textContent='No file selected';
+    c.querySelector('input').value='';picked[a[0]]=null;if(a[0]!=='target')dbDel(a[0]);refreshStart();
   });
 });
 $('btnClear').addEventListener('click',()=>{logBox.innerHTML='';addLog('sys','Logs cleared.');});
-addLog('sys','> NPC OFFSET UPDATER v1.1');
+addLog('sys','> NPC OFFSET UPDATER v14.0');
 addLog('info','Import limit: 100 MB per file · processing runs on a worker thread');
 addLog('info','Select OLD dump.cs, NEW dump.cs and the file to update.');
+['old','new'].forEach(async function(k){
+  const r=await dbGet(k);
+  if(r&&r.blob&&!picked[k])setFile(k,new File([r.blob],r.name||(k+'_dump.cs'),{type:r.type||''}),true);
+});
+(function(){
+  const o=$('heroOld'),n=$('heroNew');if(!o||!n)return;
+  const pairs=[['0x1A4F20','0x1B8C30'],['0x2E91D8','0x2FA340'],['0x0C7B64','0x0D1E9C'],['0x4D02A8','0x4E5710']];
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const H='0123456789ABCDEF';let i=0;
+  function scramble(el,to,ms){const t0=performance.now();(function f(now){const p=Math.min(1,(now-t0)/ms);let s='0x';for(let k=2;k<to.length;k++)s+=(p>(k-1)/to.length)?to[k]:H[Math.random()*16|0];el.textContent=s;if(p<1)requestAnimationFrame(f);})(t0);}
+  setInterval(function(){i=(i+1)%pairs.length;scramble(o,pairs[i][0],600);setTimeout(function(){scramble(n,pairs[i][1],800);},250);},3600);
+})();
 resetResults();
 window.addEventListener('beforeunload',()=>{if(worker)worker.terminate();});
 })();
